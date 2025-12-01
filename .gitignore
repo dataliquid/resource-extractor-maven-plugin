@@ -1,0 +1,56 @@
+# Ignore all hidden files and directories
+.*
+
+# Allow specific hidden files/directories
+!.gitignore
+!.gitattributes
+!.github/
+!.github/**
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+
+# IDE - IntelliJ IDEA
+*.iws
+*.iml
+*.ipr
+out/
+
+# IDE - Eclipse
+*.factorypath
+
+# IDE - Visual Studio Code
+*.code-workspace
+
+# macOS
+Thumbs.db
+ehthumbs.db
+
+# Linux
+*~
+
+# Logs
+*.log
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Compiled class files
+*.class
+
+# Test output
+test-output/
+surefire-reports/
