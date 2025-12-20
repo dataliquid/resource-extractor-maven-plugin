@@ -1,6 +1,7 @@
 # Resource Extractor Maven Plugin
 
 [![CI Build](https://github.com/dataliquid/resource-extractor-maven-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/dataliquid/resource-extractor-maven-plugin/actions/workflows/ci.yml)
+[![Maven Central](https://img.shields.io/maven-central/v/com.dataliquid.maven/resource-extractor-maven-plugin.svg)](https://search.maven.org/artifact/com.dataliquid.maven/resource-extractor-maven-plugin)
 
 A Maven plugin for extracting resources from JAR dependencies during the build process.
 
