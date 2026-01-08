@@ -121,10 +121,20 @@ public class ArchiveExtractor {
     }
 
     private static File determineOutputFile(String entryName, File outputDir, boolean flatten, String filePrefix,
-            String fileSuffix) {
+            String fileSuffix) throws IOException {
         String basePath = flatten ? new File(entryName).getName() : entryName;
         String outputPath = applyNaming(basePath, filePrefix, fileSuffix);
-        return new File(outputDir, outputPath);
+        File outputFile = new File(outputDir, outputPath);
+
+        // ZIP Slip protection: ensure file stays within output directory
+        String canonicalOutputDir = outputDir.getCanonicalPath();
+        String canonicalOutputFile = outputFile.getCanonicalPath();
+
+        if (!canonicalOutputFile.startsWith(canonicalOutputDir + File.separator)) {
+            throw new IOException("Entry is outside of the target directory: " + entryName);
+        }
+
+        return outputFile;
     }
 
     private static String applyNaming(String filePath, String filePrefix, String fileSuffix) {

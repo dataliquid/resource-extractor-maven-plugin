@@ -1,9 +1,13 @@
 package com.dataliquid.maven.extractor;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DefaultArtifact;
@@ -254,5 +258,82 @@ public class ExtractMojoTest extends AbstractMojoTestCase {
             }
         }
         dir.delete();
+    }
+
+    /**
+     * Test that ZIP Slip path traversal attacks are blocked.
+     */
+    public void testZipSlipProtection() throws Exception {
+        File pom = getTestFile("target/test-classes/test-poms/zip-slip-test-pom.xml");
+        assertNotNull("POM file should not be null", pom);
+        assertTrue("POM file should exist", pom.exists());
+
+        ExtractMojo mojo = (ExtractMojo) lookupMojo("extract", pom);
+        assertNotNull("Mojo should not be null", mojo);
+
+        // Create a malicious JAR with path traversal entry
+        File maliciousJar = createMaliciousJar();
+
+        MavenProject project = createMockProjectWithJar(maliciousJar, "malicious", "zip-slip-jar");
+        setVariableValueToObject(mojo, "project", project);
+        setVariableValueToObject(mojo, "outputDirectory", outputDirectory);
+
+        DependencyConfig depConfig = new DependencyConfig("malicious", "zip-slip-jar");
+        setVariableValueToObject(mojo, "dependencies", Arrays.asList(depConfig));
+        setVariableValueToObject(mojo, "scope", "compile");
+
+        // Execute should handle the malicious entry gracefully
+        try {
+            mojo.execute();
+        } catch (Exception e) {
+            // Expected: IOException wrapped in MojoExecutionException
+            assertTrue("Should be caused by path traversal protection",
+                    e.getMessage().contains("outside of the target directory")
+                            || e.getCause().getMessage().contains("outside of the target directory"));
+        }
+
+        // Verify that the malicious file was NOT extracted outside outputDirectory
+        File parentDir = outputDirectory.getParentFile();
+        File escapedFile = new File(parentDir, "evil.txt");
+        assertFalse("Malicious file should NOT be extracted outside output directory", escapedFile.exists());
+    }
+
+    private File createMaliciousJar() throws IOException {
+        File tempDir = new File(getBasedir(), "target/test-output");
+        tempDir.mkdirs();
+        File maliciousJar = new File(tempDir, "malicious-zip-slip.jar");
+
+        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(maliciousJar))) {
+            // Add a normal entry
+            ZipEntry normalEntry = new ZipEntry("normal.txt");
+            zos.putNextEntry(normalEntry);
+            zos.write("Normal content".getBytes());
+            zos.closeEntry();
+
+            // Add a malicious path traversal entry
+            ZipEntry maliciousEntry = new ZipEntry("../evil.txt");
+            zos.putNextEntry(maliciousEntry);
+            zos.write("Malicious content".getBytes());
+            zos.closeEntry();
+        }
+
+        return maliciousJar;
+    }
+
+    private MavenProject createMockProjectWithJar(File jarFile, String groupId, String artifactId) {
+        MavenProject project = new MavenProject();
+        project.setGroupId("com.dataliquid.maven.test");
+        project.setArtifactId("test-project");
+        project.setVersion("1.0.0");
+
+        DefaultArtifact artifact = new DefaultArtifact(groupId, artifactId, "1.0.0", "compile", "jar", null,
+                new DefaultArtifactHandler("jar"));
+        artifact.setFile(jarFile);
+
+        Set<Artifact> artifacts = new LinkedHashSet<>();
+        artifacts.add(artifact);
+        project.setArtifacts(artifacts);
+
+        return project;
     }
 }
