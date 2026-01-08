@@ -1,18 +1,3 @@
-/*
- * Copyright © 2024 dataliquid GmbH | www.dataliquid.com
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
- */
 package com.dataliquid.maven.extractor.util;
 
 import java.io.File;
@@ -136,10 +121,20 @@ public class ArchiveExtractor {
     }
 
     private static File determineOutputFile(String entryName, File outputDir, boolean flatten, String filePrefix,
-            String fileSuffix) {
+            String fileSuffix) throws IOException {
         String basePath = flatten ? new File(entryName).getName() : entryName;
         String outputPath = applyNaming(basePath, filePrefix, fileSuffix);
-        return new File(outputDir, outputPath);
+        File outputFile = new File(outputDir, outputPath);
+
+        // ZIP Slip protection: ensure file stays within output directory
+        String canonicalOutputDir = outputDir.getCanonicalPath();
+        String canonicalOutputFile = outputFile.getCanonicalPath();
+
+        if (!canonicalOutputFile.startsWith(canonicalOutputDir + File.separator)) {
+            throw new IOException("Entry is outside of the target directory: " + entryName);
+        }
+
+        return outputFile;
     }
 
     private static String applyNaming(String filePath, String filePrefix, String fileSuffix) {
