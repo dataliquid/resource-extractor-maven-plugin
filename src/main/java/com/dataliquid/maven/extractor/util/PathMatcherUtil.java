@@ -46,7 +46,6 @@ public class PathMatcherUtil {
     /**
      * Simple glob pattern matcher supporting * and ** wildcards.
      */
-    @SuppressWarnings("PMD.CognitiveComplexity")
     private static boolean simpleGlobMatch(String path, String pattern) {
         // Handle ** globstar pattern
         if (pattern.contains(GLOBSTAR_PATTERN)) {
