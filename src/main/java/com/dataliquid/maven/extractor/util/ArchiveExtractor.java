@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory;
 public class ArchiveExtractor {
 
     private static final Logger LOG = LoggerFactory.getLogger(ArchiveExtractor.class);
-    private static final int BUFFER_SIZE = 4096;
 
     private ArchiveExtractor() {
         // Utility class
@@ -107,14 +106,9 @@ public class ArchiveExtractor {
         return true;
     }
 
-    @SuppressWarnings("PMD.AssignmentInOperand")
     private static void writeFile(ZipInputStream zis, File outputFile) throws IOException {
         try (OutputStream out = Files.newOutputStream(outputFile.toPath())) {
-            byte[] buffer = new byte[BUFFER_SIZE];
-            int bytesRead;
-            while ((bytesRead = zis.read(buffer)) != -1) {
-                out.write(buffer, 0, bytesRead);
-            }
+            zis.transferTo(out);
         }
     }
 
