@@ -40,7 +40,7 @@ public class ExtractMojoTest extends AbstractMojoTestCase {
     }
 
     /**
-     * Test basic extraction of META-INF files from commons-io JAR.
+     * Test basic extraction of META-INF files from test JAR.
      */
     public void testBasicExtraction() throws Exception {
         File pom = getTestFile("target/test-classes/test-poms/basic-extract-test-pom.xml");
@@ -54,7 +54,7 @@ public class ExtractMojoTest extends AbstractMojoTestCase {
         setVariableValueToObject(mojo, "project", project);
         setVariableValueToObject(mojo, "outputDirectory", outputDirectory);
 
-        DependencyConfig depConfig = new DependencyConfig("commons-io", "commons-io");
+        DependencyConfig depConfig = new DependencyConfig("test", "test-resources");
         setVariableValueToObject(mojo, "dependencies", Arrays.asList(depConfig));
         setVariableValueToObject(mojo, "includes", Arrays.asList("META-INF/**"));
         setVariableValueToObject(mojo, "scope", "compile");
@@ -107,7 +107,7 @@ public class ExtractMojoTest extends AbstractMojoTestCase {
         setVariableValueToObject(mojo, "project", project);
         setVariableValueToObject(mojo, "outputDirectory", outputDirectory);
 
-        DependencyConfig depConfig = new DependencyConfig("commons-io", "commons-io");
+        DependencyConfig depConfig = new DependencyConfig("test", "test-resources");
         setVariableValueToObject(mojo, "dependencies", Arrays.asList(depConfig));
         setVariableValueToObject(mojo, "includes", Arrays.asList("**/*.txt"));
         setVariableValueToObject(mojo, "scope", "compile");
@@ -136,7 +136,7 @@ public class ExtractMojoTest extends AbstractMojoTestCase {
         setVariableValueToObject(mojo, "project", project);
         setVariableValueToObject(mojo, "outputDirectory", outputDirectory);
 
-        DependencyConfig depConfig = new DependencyConfig("commons-io", "commons-io");
+        DependencyConfig depConfig = new DependencyConfig("test", "test-resources");
         setVariableValueToObject(mojo, "dependencies", Arrays.asList(depConfig));
         setVariableValueToObject(mojo, "includes", Arrays.asList("META-INF/**"));
         setVariableValueToObject(mojo, "excludes", Arrays.asList("**/*.class"));
@@ -165,7 +165,7 @@ public class ExtractMojoTest extends AbstractMojoTestCase {
         setVariableValueToObject(mojo, "project", project);
         setVariableValueToObject(mojo, "outputDirectory", outputDirectory);
 
-        DependencyConfig depConfig = new DependencyConfig("commons-io", "commons-io");
+        DependencyConfig depConfig = new DependencyConfig("test", "test-resources");
         setVariableValueToObject(mojo, "dependencies", Arrays.asList(depConfig));
         setVariableValueToObject(mojo, "includes", Arrays.asList("META-INF/*.txt"));
         setVariableValueToObject(mojo, "flattenStructure", true);
@@ -193,7 +193,7 @@ public class ExtractMojoTest extends AbstractMojoTestCase {
         setVariableValueToObject(mojo, "project", project);
         setVariableValueToObject(mojo, "outputDirectory", outputDirectory);
 
-        DependencyConfig depConfig = new DependencyConfig("commons-io", "commons-io");
+        DependencyConfig depConfig = new DependencyConfig("test", "test-resources");
         setVariableValueToObject(mojo, "dependencies", Arrays.asList(depConfig));
         setVariableValueToObject(mojo, "includes", Arrays.asList("META-INF/**"));
         setVariableValueToObject(mojo, "scope", "test");
@@ -205,31 +205,48 @@ public class ExtractMojoTest extends AbstractMojoTestCase {
         assertTrue("LICENSE.txt should be extracted with test scope", new File(metaInfDir, "LICENSE.txt").exists());
     }
 
-    private MavenProject createMockProject(String scope) {
+    private MavenProject createMockProject(String scope) throws IOException {
         MavenProject project = new MavenProject();
         project.setGroupId("com.dataliquid.maven.test");
         project.setArtifactId("test-project");
         project.setVersion("1.0.0");
 
-        File commonsIoJar = findCommonsIoJar();
-        if (commonsIoJar != null && commonsIoJar.exists()) {
-            DefaultArtifact artifact = new DefaultArtifact("commons-io", "commons-io", "2.21.0", scope, "jar", null,
-                    new DefaultArtifactHandler("jar"));
-            artifact.setFile(commonsIoJar);
+        File testJar = createTestJar();
+        DefaultArtifact artifact = new DefaultArtifact("test", "test-resources", "1.0.0", scope, "jar", null,
+                new DefaultArtifactHandler("jar"));
+        artifact.setFile(testJar);
 
-            Set<Artifact> artifacts = new LinkedHashSet<>();
-            artifacts.add(artifact);
-            project.setArtifacts(artifacts);
-        }
+        Set<Artifact> artifacts = new LinkedHashSet<>();
+        artifacts.add(artifact);
+        project.setArtifacts(artifacts);
 
         return project;
     }
 
-    private File findCommonsIoJar() {
-        String userHome = System.getProperty("user.home");
-        File localRepo = new File(userHome, ".m2/repository");
-        File commonsIoJar = new File(localRepo, "commons-io/commons-io/2.21.0/commons-io-2.21.0.jar");
-        return commonsIoJar.exists() ? commonsIoJar : null;
+    private File createTestJar() throws IOException {
+        File testDir = new File(getBasedir(), "target/test-output");
+        testDir.mkdirs();
+        File testJar = new File(testDir, "test-resources.jar");
+
+        if (testJar.exists()) {
+            return testJar;
+        }
+
+        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(testJar))) {
+            addZipEntry(zos, "META-INF/LICENSE.txt", "Test License Content");
+            addZipEntry(zos, "META-INF/NOTICE.txt", "Test Notice Content");
+            addZipEntry(zos, "META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n");
+            addZipEntry(zos, "META-INF/maven/test/test-resources/pom.xml", "<project/>");
+            addZipEntry(zos, "META-INF/maven/test/test-resources/pom.properties", "version=1.0.0");
+            addZipEntry(zos, "org/example/Test.class", "fake class content");
+        }
+        return testJar;
+    }
+
+    private void addZipEntry(ZipOutputStream zos, String name, String content) throws IOException {
+        zos.putNextEntry(new ZipEntry(name));
+        zos.write(content.getBytes());
+        zos.closeEntry();
     }
 
     private void assertNoClassFiles(File dir) {
