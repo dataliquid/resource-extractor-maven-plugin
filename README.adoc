@@ -1,0 +1,74 @@
+= Resource Extractor Maven Plugin
+
+image:https://github.com/dataliquid/resource-extractor-maven-plugin/actions/workflows/ci.yml/badge.svg[CI Build,link=https://github.com/dataliquid/resource-extractor-maven-plugin/actions/workflows/ci.yml]
+image:https://img.shields.io/maven-central/v/com.dataliquid.maven/resource-extractor-maven-plugin.svg[Maven Central,link=https://search.maven.org/artifact/com.dataliquid.maven/resource-extractor-maven-plugin]
+image:https://img.shields.io/badge/license-Apache%202.0-blue.svg[License,link=https://opensource.org/licenses/Apache-2.0]
+image:https://img.shields.io/badge/Java-17%2B-blue.svg[Java Version]
+image:https://img.shields.io/badge/Maven-3.9%2B-blue.svg[Maven Version]
+
+A Maven plugin for extracting resources from JAR dependencies during the build process.
+
+== Usage
+
+[source,xml]
+----
+<plugin>
+    <groupId>com.dataliquid.maven</groupId>
+    <artifactId>resource-extractor-maven-plugin</artifactId>
+    <version>1.0.0</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>extract</goal>
+            </goals>
+            <configuration>
+                <outputDirectory>${project.build.directory}/extracted</outputDirectory>
+                <dependencies>
+                    <dependency>
+                        <groupId>commons-io</groupId>
+                        <artifactId>commons-io</artifactId>
+                    </dependency>
+                </dependencies>
+                <includes>
+                    <include>META-INF/*.txt</include>
+                </includes>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+----
+
+== Configuration
+
+[cols="1,2,1",options="header"]
+|===
+| Parameter | Description | Default
+
+| `outputDirectory`
+| Target directory for extracted files
+| required
+
+| `dependencies`
+| List of dependencies to extract from
+| -
+
+| `includes`
+| Glob patterns to include
+| all files
+
+| `excludes`
+| Glob patterns to exclude
+| -
+
+| `overwrite`
+| Overwrite existing files
+| `true`
+
+| `flattenStructure`
+| Flatten directory structure
+| `false`
+
+| `scope`
+| Dependency scope (compile, test, etc.)
+| `compile`
+|===
