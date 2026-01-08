@@ -1,9 +1,8 @@
 package com.dataliquid.maven.extractor.util;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +42,7 @@ public class ArchiveExtractor {
      *
      * @throws IOException     if extraction fails
      */
-    @SuppressWarnings({ "PMD.AvoidFileStream", "PMD.AssignmentInOperand" })
+    @SuppressWarnings("PMD.AssignmentInOperand")
     public static List<String> extract(File archiveFile, File outputDir, List<String> includePatterns,
             List<String> excludePatterns, boolean overwrite, boolean flatten, String filePrefix, String fileSuffix)
             throws IOException {
@@ -53,7 +52,7 @@ public class ArchiveExtractor {
 
         List<String> extractedFiles = new ArrayList<>();
 
-        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(archiveFile))) {
+        try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(archiveFile.toPath()))) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
                 String entryName = entry.getName();
@@ -93,7 +92,6 @@ public class ArchiveExtractor {
         }
     }
 
-    @SuppressWarnings("PMD.AvoidFileStream")
     private static boolean extractEntry(ZipInputStream zis, File outputFile, String entryName, boolean overwrite)
             throws IOException {
 
@@ -109,13 +107,13 @@ public class ArchiveExtractor {
         return true;
     }
 
-    @SuppressWarnings({ "PMD.AvoidFileStream", "PMD.AssignmentInOperand" })
+    @SuppressWarnings("PMD.AssignmentInOperand")
     private static void writeFile(ZipInputStream zis, File outputFile) throws IOException {
-        try (FileOutputStream fos = new FileOutputStream(outputFile)) {
+        try (OutputStream out = Files.newOutputStream(outputFile.toPath())) {
             byte[] buffer = new byte[BUFFER_SIZE];
             int bytesRead;
             while ((bytesRead = zis.read(buffer)) != -1) {
-                fos.write(buffer, 0, bytesRead);
+                out.write(buffer, 0, bytesRead);
             }
         }
     }
