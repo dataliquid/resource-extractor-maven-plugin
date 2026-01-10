@@ -15,7 +15,7 @@ A Maven plugin for extracting resources from JAR dependencies during the build p
 <plugin>
     <groupId>com.dataliquid.maven</groupId>
     <artifactId>resource-extractor-maven-plugin</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <executions>
         <execution>
             <goals>
