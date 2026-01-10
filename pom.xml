@@ -14,7 +14,7 @@
 
 	<url>https://www.dataliquid.com</url>
 
-	<inceptionYear>2024</inceptionYear>
+	<inceptionYear>2025</inceptionYear>
 
 	<licenses>
 		<license>
@@ -22,7 +22,7 @@
 		</license>
 	</licenses>
 	<scm>
-		<url>https://github.com/dataliquid/resource-extractor-maven-plugin/tree/main</url>
+		<url>https://github.com/dataliquid/resource-extractor-maven-plugin/tree/master</url>
 	</scm>
 
 
