@@ -81,41 +81,36 @@ public class PathMatcherUtil {
         return simpleMatch(path, pattern);
     }
 
-    /**
-     * Simple pattern matcher supporting * wildcard.
-     */
     private static boolean simpleMatch(String path, String pattern) {
         int pathIdx = 0;
         int patternIdx = 0;
         int pathLen = path.length();
         int patternLen = pattern.length();
+        int starPathIdx = -1;
+        int starPatternIdx = -1;
 
-        while (pathIdx < pathLen && patternIdx < patternLen) {
-            if (pattern.charAt(patternIdx) == GLOB_STAR) {
+        while (pathIdx < pathLen) {
+            if (patternIdx < patternLen && pattern.charAt(patternIdx) == GLOB_STAR) {
+                starPatternIdx = patternIdx;
+                starPathIdx = pathIdx;
                 patternIdx++;
-                if (patternIdx >= patternLen) {
-                    return true;
-                }
-                char nextPatChar = pattern.charAt(patternIdx);
-                while (pathIdx < pathLen && path.charAt(pathIdx) != nextPatChar) {
-                    pathIdx++;
-                }
-                continue;
-            }
-
-            if (path.charAt(pathIdx) != pattern.charAt(patternIdx)) {
+            } else if (patternIdx < patternLen && path.charAt(pathIdx) == pattern.charAt(patternIdx)) {
+                pathIdx++;
+                patternIdx++;
+            } else if (starPatternIdx != -1) {
+                patternIdx = starPatternIdx + 1;
+                starPathIdx++;
+                pathIdx = starPathIdx;
+            } else {
                 return false;
             }
-
-            pathIdx++;
-            patternIdx++;
         }
 
         while (patternIdx < patternLen && pattern.charAt(patternIdx) == GLOB_STAR) {
             patternIdx++;
         }
 
-        return pathIdx == pathLen && patternIdx == patternLen;
+        return patternIdx == patternLen;
     }
 
     /**
