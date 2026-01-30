@@ -63,4 +63,29 @@ public class PathMatcherUtilTest extends TestCase {
         assertFalse("Empty exclude patterns should not exclude anything",
                 PathMatcherUtil.isExcluded("any/path/file.txt", Collections.emptyList()));
     }
+
+    public void testWildcardBacktrackingOnMultipleOccurrences() {
+        assertTrue("*-backup.dat should match server-config-backup.dat",
+                PathMatcherUtil.matches("server-config-backup.dat", Arrays.asList("*-backup.dat")));
+        assertTrue("*-drop.sql should match schema-admin-drop.sql",
+                PathMatcherUtil.matches("schema-admin-drop.sql", Arrays.asList("*-drop.sql")));
+        assertTrue("*-drop.sql should match simple-drop.sql",
+                PathMatcherUtil.matches("simple-drop.sql", Arrays.asList("*-drop.sql")));
+        assertFalse("*-drop.sql should not match schema-admin-drop.txt",
+                PathMatcherUtil.matches("schema-admin-drop.txt", Arrays.asList("*-drop.sql")));
+    }
+
+    public void testWildcardBacktrackingWithPath() {
+        assertTrue("jdbc/schema/*-drop.sql should match jdbc/schema/schema-admin-drop.sql",
+                PathMatcherUtil.matches("jdbc/schema/schema-admin-drop.sql", Arrays.asList("jdbc/schema/*-drop.sql")));
+        assertFalse("jdbc/schema/*-drop.sql should not match jdbc/other/schema-admin-drop.sql",
+                PathMatcherUtil.matches("jdbc/other/schema-admin-drop.sql", Arrays.asList("jdbc/schema/*-drop.sql")));
+    }
+
+    public void testIsExcludedBacktracking() {
+        assertTrue("jdbc/schema/*-drop.sql should exclude jdbc/schema/schema-admin-drop.sql", PathMatcherUtil
+                .isExcluded("jdbc/schema/schema-admin-drop.sql", Arrays.asList("jdbc/schema/*-drop.sql")));
+        assertFalse("jdbc/schema/*-drop.sql should not exclude jdbc/schema/schema-admin-create.sql", PathMatcherUtil
+                .isExcluded("jdbc/schema/schema-admin-create.sql", Arrays.asList("jdbc/schema/*-drop.sql")));
+    }
 }
